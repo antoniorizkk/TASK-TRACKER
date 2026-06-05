@@ -36,30 +36,81 @@ const updateTask = async (req,res) => {
 }
 
 const deleteTask = async (req,res) => {
-    const {id} =req.params;
-    const numericId = Number(id);
 
-    const deletedTask = await Task.findOneAndDelete(
-        {taskId: numericId}
-    );
+    try{
+        const {id} =req.params;
+        const numericId = Number(id);
 
-    if(!deletedTask){
-        return res.status(404).json({message:"Task not found"});
+        const deletedTask = await Task.findOneAndDelete(
+            {taskId: numericId}
+        );
+
+        if(!deletedTask){
+            return res.status(404).json({message:"Task not found"});
+        }
+
+        res.status(200).json({message:"Task deleted successfuly"});
+
+    } catch (err) {
+        res.status(500).json({error:err.message});
     }
 
-    res.status(200).json({message:"Task deleted successfuly"});
 }
 
-const listTodoTask = async (req,res) => {
-    const tasks = await Task.find({status: "todo"});
+const listTask = async (req,res) => {
+    try{
+        const {status} = req.params;
+        const stringStatus = String(status);
 
-    if(!tasks){
-        return res.status(404).json({message:"No todo tasks available"});
+        const validStatuses = ["todo","in-progress","done"];
+
+        if(!validStatuses.includes(stringStatus)){
+            return res.status(400).json({error:"not valid status (use todo, in-progress, or done)"})
+        }
+
+        const tasks = await Task.find({
+            status:stringStatus,
+        });
+
+        if(tasks.length === 0){
+            return res.status(404).json({message:"No todo task(s)"});
+        }
+        res.status(200).json(tasks);
+    } catch (err) {
+        res.status(500).json({error:err.message});
     }
-
-    res.status(200).json(tasks);
 }
 
 
+const updateTaskStatus = async (req, res) => {
+    try{
+        const {status,id} = req.params;
+   
 
-export default {insertTask, updateTask, deleteTask, listTodoTask}
+        const numericId = Number(id);
+        const stringStatus = String(status)
+
+        const validStatuses = ["todo","in-progress","done"];
+
+        if(!validStatuses.includes(stringStatus)){
+            return res.status(400).json({error:"not valid status (use todo, in-progress, or done)"})
+        }
+
+        const updateTask = await Task.findOneAndUpdate(
+            {taskId:numericId},
+            {$set:{status:stringStatus}},
+            {new: true}
+        );
+
+        if(!updateTask){
+            return res.status(400).json({error:"Task not found"});
+        }
+
+        res.status(200).json(updateTask);
+
+    } catch (err) {
+        res.status(500).json({error:err.message});
+    }
+}
+
+export default {insertTask, updateTask, deleteTask, listTask,updateTaskStatus}
