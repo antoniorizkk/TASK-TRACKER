@@ -1,6 +1,7 @@
 import mongoose from "mongoose"
 
 const taskSchema = mongoose.Schema({
+
     title:{
         type:String,
         required:[true,"Title is required"]
@@ -9,13 +10,14 @@ const taskSchema = mongoose.Schema({
         type:String,
         required:[true,"Description is required"]
     },
-    isFinished:{
-        type:Boolean,
-        default:false
+    status:{
+        type:String,
+        enum:["todo","in-progress","done"],
+        default:"todo"
     }
 },
 {
-    timestamps: new Date(),
+    timestamps: new Date()
 }
 );
 
